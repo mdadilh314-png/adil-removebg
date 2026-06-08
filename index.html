@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADIL RemBg — HD Background Remover</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS VARIABLES ──────────────────────────────────────────────── */
+    :root {
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg-base:        #080b12;
+      --bg-orb-1:       #1a0a2e;
+      --bg-orb-2:       #0a1628;
+      --bg-orb-3:       #0d1f0a;
+      --glass-bg:       rgba(255,255,255,0.04);
+      --glass-border:   rgba(255,255,255,0.10);
+      --glass-hover:    rgba(255,255,255,0.07);
+      --glass-deep:     rgba(0,0,0,0.30);
+      --text-primary:   #f0f2f8;
+      --text-secondary: #8b93a8;
+      --text-muted:     #4a5268;
+      --accent-violet:  #7c5af0;
+      --accent-indigo:  #4f7df0;
+      --accent-emerald: #22c97a;
+      --accent-rose:    #f05a7c;
+      --accent-amber:   #f0a63a;
+      --badge-normal:   rgba(79,125,240,0.18);
+      --badge-premium:  rgba(124,90,240,0.18);
+      --badge-pro:      rgba(34,201,122,0.18);
+      --shadow-card:    0 32px 64px rgba(0,0,0,0.55);
+      --glow-violet:    0 0 40px rgba(124,90,240,0.25);
+    }
+
+    [data-theme="light"] {
+      --bg-base:        #f0f3fa;
+      --bg-orb-1:       #e8e0ff;
+      --bg-orb-2:       #dce8ff;
+      --bg-orb-3:       #d8f0e8;
+      --glass-bg:       rgba(255,255,255,0.62);
+      --glass-border:   rgba(255,255,255,0.90);
+      --glass-hover:    rgba(255,255,255,0.80);
+      --glass-deep:     rgba(255,255,255,0.45);
+      --text-primary:   #0f1624;
+      --text-secondary: #4a5470;
+      --text-muted:     #8890a8;
+      --accent-violet:  #6340e8;
+      --accent-indigo:  #3560d8;
+      --accent-emerald: #18a862;
+      --accent-rose:    #d84060;
+      --accent-amber:   #d4860a;
+      --badge-normal:   rgba(53,96,216,0.12);
+      --badge-premium:  rgba(99,64,232,0.12);
+      --badge-pro:      rgba(24,168,98,0.12);
+      --shadow-card:    0 24px 60px rgba(60,80,160,0.14);
+      --glow-violet:    0 0 40px rgba(99,64,232,0.15);
+    }
+
+    /* ─── RESET & BASE ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.5s var(--ease-out-expo), color 0.5s var(--ease-out-expo);
+    }
+
+    /* ─── ANIMATED BACKGROUND ORBS ──────────────────────────────────── */
+    .bg-scene {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.55;
+      transition: background 0.6s ease;
+      animation: drift 18s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 700px; height: 700px; top: -200px; left: -200px;
+      background: radial-gradient(circle, var(--bg-orb-1), transparent 70%);
+      animation-duration: 22s;
+    }
+    .orb-2 {
+      width: 600px; height: 600px; bottom: -150px; right: -100px;
+      background: radial-gradient(circle, var(--bg-orb-2), transparent 70%);
+      animation-duration: 18s; animation-delay: -6s;
+    }
+    .orb-3 {
+      width: 450px; height: 450px; top: 40%; left: 55%;
+      background: radial-gradient(circle, var(--bg-orb-3), transparent 70%);
+      animation-duration: 26s; animation-delay: -12s;
+    }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(40px, -30px) scale(1.05); }
+      66%       { transform: translate(-30px, 40px) scale(0.97); }
+    }
+
+    /* Subtle noise grain overlay */
+    .bg-grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────────── */
+    .app-wrapper {
+      position: relative; z-index: 2;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 0 20px 60px;
+    }
+
+    /* ─── GLASS CARD ─────────────────────────────────────────────────── */
+    .glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-radius: 24px;
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+    .glass:hover { background: var(--glass-hover); }
+
+    /* ─── HEADER ─────────────────────────────────────────────────────── */
+    header {
+      width: 100%; max-width: 1060px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 0 20px;
+    }
+
+    .brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-indigo));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── THEME TOGGLE ───────────────────────────────────────────────── */
+    .theme-toggle {
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; user-select: none;
+    }
+    .theme-toggle-label {
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--text-secondary);
+      transition: color 0.3s;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .toggle-track {
+      width: 48px; height: 26px; border-radius: 13px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      position: relative; cursor: pointer;
+      transition: background 0.35s, border-color 0.35s;
+      flex-shrink: 0;
+    }
+    .toggle-track.active {
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-indigo));
+      border-color: transparent;
+    }
+    .toggle-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #fff;
+      position: absolute; top: 2px; left: 3px;
+      transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+    }
+    .toggle-track.active .toggle-thumb { transform: translateX(22px); }
+
+    /* ─── HERO HEADLINE ──────────────────────────────────────────────── */
+    .hero-section {
+      width: 100%; max-width: 1060px;
+      text-align: center; padding: 40px 0 36px;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--badge-premium);
+      border: 1px solid rgba(124,90,240,0.22);
+      border-radius: 100px;
+      padding: 5px 16px;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent-violet);
+      margin-bottom: 22px;
+    }
+    .hero-eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-violet);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      transition: color 0.4s;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-violet) 0%, var(--accent-indigo) 50%, var(--accent-emerald) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── MAIN CARD ──────────────────────────────────────────────────── */
+    .main-card {
+      width: 100%; max-width: 1060px;
+      box-shadow: var(--shadow-card), var(--glow-violet);
+      padding: 44px 48px 48px;
+      transition: box-shadow 0.4s ease;
+    }
+    @media (max-width: 640px) { .main-card { padding: 28px 22px 32px; } }
+
+    /* ─── DROP ZONE ──────────────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--glass-border);
+      border-radius: 18px;
+      padding: 64px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s, transform 0.25s var(--ease-out-expo);
+      background: var(--glass-deep);
+      position: relative; overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent-violet);
+      background: rgba(124,90,240,0.06);
+      transform: scale(1.008);
+    }
+    .drop-zone.drag-over { border-style: solid; }
+    .drop-zone input[type="file"] { display: none; }
+
+    .drop-icon {
+      width: 68px; height: 68px; margin: 0 auto 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-indigo));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 32px rgba(124,90,240,0.35);
+      transition: transform 0.3s var(--ease-out-expo), box-shadow 0.3s;
+    }
+    .drop-zone:hover .drop-icon {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 18px 40px rgba(124,90,240,0.45);
+    }
+    .drop-icon svg { width: 30px; height: 30px; color: #fff; }
+
+    .drop-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.22rem; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 8px;
+    }
+    .drop-sub {
+      font-size: 0.88rem; color: var(--text-secondary);
+      margin-bottom: 24px; line-height: 1.6;
+    }
+    .drop-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-indigo));
+      color: #fff; border: none; border-radius: 12px;
+      padding: 12px 28px; font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: transform 0.22s var(--ease-out-expo), box-shadow 0.22s, opacity 0.2s;
+      box-shadow: 0 8px 24px rgba(124,90,240,0.35);
+    }
+    .drop-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,90,240,0.5); }
+    .drop-btn:active { transform: translateY(0); }
+
+    .drop-formats {
+      margin-top: 18px; font-size: 0.75rem;
+      color: var(--text-muted); letter-spacing: 0.05em;
+    }
+
+    /* ─── PROCESSING STATE ───────────────────────────────────────────── */
+    .processing-panel {
+      display: none; text-align: center; padding: 48px 20px;
+    }
+    .processing-panel.active { display: block; }
+
+    .spinner-ring {
+      width: 72px; height: 72px; margin: 0 auto 24px;
+      border-radius: 50%;
+      border: 3px solid var(--glass-border);
+      border-top-color: var(--accent-violet);
+      border-right-color: var(--accent-indigo);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .processing-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 8px;
+    }
+    .processing-sub {
+      font-size: 0.87rem; color: var(--text-secondary);
+    }
+
+    /* ─── PROGRESS BAR ───────────────────────────────────────────────── */
+    .progress-wrap {
+      width: 100%; max-width: 340px;
+      margin: 28px auto 0;
+      background: var(--glass-deep);
+      border-radius: 100px; height: 6px; overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent-violet), var(--accent-indigo), var(--accent-emerald));
+      background-size: 200% 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+      animation: shimmer 2s linear infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    /* ─── RESULT SECTION ─────────────────────────────────────────────── */
+    .result-section { display: none; }
+    .result-section.active { display: block; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 700px) { .result-grid { grid-template-columns: 1fr; } }
+
+    .result-card {
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--glass-deep);
+      border: 1px solid var(--glass-border);
+      position: relative;
+    }
+    .result-card-label {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(0,0,0,0.50);
+      backdrop-filter: blur(8px);
+      border-radius: 8px; padding: 4px 12px;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+    }
+    .result-card img {
+      width: 100%; height: 260px;
+      object-fit: contain;
+      display: block;
+      padding: 16px;
+      background: repeating-conic-gradient(rgba(130,130,130,0.08) 0% 25%, transparent 0% 50%) 0 0 / 20px 20px;
+      transition: transform 0.4s var(--ease-out-expo);
+    }
+    .result-card:hover img { transform: scale(1.02); }
+
+    /* ─── DOWNLOAD SECTION ───────────────────────────────────────────── */
+    .download-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 640px) { .download-grid { grid-template-columns: 1fr; } }
+
+    .dl-btn {
+      position: relative; overflow: hidden;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px 18px;
+      background: var(--glass-deep);
+      cursor: pointer; text-align: left;
+      transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s, border-color 0.25s, background 0.25s;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .dl-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      border-color: var(--accent-violet);
+      background: var(--glass-hover);
+    }
+    .dl-btn:active:not(:disabled) { transform: translateY(-1px); }
+    .dl-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .dl-btn-shimmer {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+      transform: translateX(-100%); transition: transform 0s;
+    }
+    .dl-btn:hover:not(:disabled) .dl-btn-shimmer {
+      transform: translateX(100%); transition: transform 0.6s ease;
+    }
+
+    .dl-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 8px; padding: 3px 10px;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      width: fit-content;
+    }
+    .dl-badge.normal  { background: var(--badge-normal);  color: var(--accent-indigo);  border: 1px solid rgba(79,125,240,0.25); }
+    .dl-badge.premium { background: var(--badge-premium); color: var(--accent-violet);  border: 1px solid rgba(124,90,240,0.25); }
+    .dl-badge.pro     { background: var(--badge-pro);     color: var(--accent-emerald); border: 1px solid rgba(34,201,122,0.25); }
+
+    .dl-res {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text-primary); line-height: 1.2;
+    }
+    .dl-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+    .dl-action {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 4px;
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--accent-violet);
+      transition: color 0.2s;
+    }
+    .dl-btn:hover:not(:disabled) .dl-action { color: var(--accent-indigo); }
+    .dl-action svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ─── RESET BUTTON ───────────────────────────────────────────────── */
+    .reset-btn {
+      margin-top: 28px; width: 100%;
+      background: var(--glass-deep);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer; text-align: center;
+      transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .reset-btn:hover {
+      background: rgba(240,90,124,0.08);
+      border-color: rgba(240,90,124,0.3);
+      color: var(--accent-rose);
+      transform: translateY(-1px);
+    }
+
+    /* ─── DIVIDER ────────────────────────────────────────────────────── */
+    .divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+      margin: 32px 0;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────── */
+    footer {
+      width: 100%; max-width: 1060px;
+      margin-top: 40px;
+    }
+    .footer-glass {
+      border-radius: 20px;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      text-align: center;
+    }
+    @media (max-width: 640px) { .footer-glass { padding: 24px 20px; } }
+
+    .footer-social {
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .social-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 18px;
+      border-radius: 12px;
+      background: var(--glass-deep);
+      border: 1px solid var(--glass-border);
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.82rem; font-weight: 500;
+      transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.22s var(--ease-out-expo);
+    }
+    .social-link:hover {
+      transform: translateY(-2px);
+      color: var(--text-primary);
+    }
+    .social-link.gmail:hover  { border-color: rgba(234,67,53,0.5);  background: rgba(234,67,53,0.08); }
+    .social-link.insta:hover  { border-color: rgba(195,60,165,0.5); background: rgba(195,60,165,0.08); }
+    .social-link svg { flex-shrink: 0; }
+
+    .footer-connect-text {
+      font-size: 0.82rem; color: var(--text-secondary);
+      line-height: 1.6; max-width: 460px;
+    }
+    .footer-connect-text a {
+      color: var(--accent-violet); text-decoration: none; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .footer-connect-text a:hover { color: var(--accent-indigo); text-decoration: underline; }
+
+    .footer-copy {
+      font-size: 0.76rem; color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+
+    /* ─── TOAST ──────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--glass-bg); backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: 14px;
+      padding: 12px 24px; font-size: 0.85rem; font-weight: 500;
+      color: var(--text-primary); z-index: 9999;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s var(--ease-out-expo);
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── UTILITY ────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  </style>
+</head>
+<body>
+
+<!-- Background Scene -->
+<div class="bg-scene" aria-hidden="true">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="bg-grain" aria-hidden="true"></div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="app-wrapper">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="brand">ADIL RemBg</div>
+    <div class="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme" id="themeToggle" onclick="toggleTheme()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTheme()">
+      <span class="theme-toggle-label" id="themeLabelText">Light Mode</span>
+      <div class="toggle-track active" id="toggleTrack">
+        <div class="toggle-thumb"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero-section">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      AI-Powered · HD Export · Instant Processing
+    </div>
+    <h1 class="hero-title">Remove Backgrounds</h1>
+  </section>
+
+  <!-- ── MAIN CARD ── -->
+  <main class="main-card glass" id="mainCard">
+
+    <!-- DROP ZONE -->
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/jpg" />
+      <div class="drop-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </div>
+      <div class="drop-title">Drop your image here</div>
+      <div class="drop-sub">Drag and drop a photo, or click to browse your device</div>
+      <button class="drop-btn" onclick="document.getElementById('fileInput').click()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Choose Image
+      </button>
+      <div class="drop-formats">Supports PNG · JPG · JPEG · WEBP</div>
+    </div>
+
+    <!-- PROCESSING -->
+    <div class="processing-panel" id="processingPanel">
+      <div class="spinner-ring"></div>
+      <div class="processing-title">Removing Background</div>
+      <div class="processing-sub">Our AI is carefully isolating your subject — please wait</div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-section" id="resultSection">
+
+      <div class="result-grid">
+        <!-- Original Preview -->
+        <div class="result-card">
+          <span class="result-card-label">Original</span>
+          <img id="originalPreview" src="" alt="Original image" />
+        </div>
+        <!-- Result Preview -->
+        <div class="result-card">
+          <span class="result-card-label">Background Removed</span>
+          <img id="resultPreview" src="" alt="Background removed image" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Download Tier -->
+      <div class="download-title">Export Your Image</div>
+      <div class="download-grid">
+
+        <!-- Normal -->
+        <button class="dl-btn" id="dlNormal" onclick="handleDownload('normal')" type="button">
+          <div class="dl-btn-shimmer"></div>
+          <span class="dl-badge normal">Normal</span>
+          <div class="dl-res">720p HD</div>
+          <div class="dl-desc">1280 × 720 · Standard definition transparent PNG</div>
+          <div class="dl-action" id="dlNormalAction">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Download
+          </div>
+        </button>
+
+        <!-- Premium -->
+        <button class="dl-btn" id="dlPremium" onclick="handleDownload('premium')" type="button">
+          <div class="dl-btn-shimmer"></div>
+          <span class="dl-badge premium">Premium</span>
+          <div class="dl-res">1080p Full HD</div>
+          <div class="dl-desc">1920 × 1080 · Full HD transparent PNG export</div>
+          <div class="dl-action" id="dlPremiumAction">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Download
+          </div>
+        </button>
+
+        <!-- Pro -->
+        <button class="dl-btn" id="dlPro" onclick="handleDownload('pro')" type="button">
+          <div class="dl-btn-shimmer"></div>
+          <span class="dl-badge pro">Pro</span>
+          <div class="dl-res">2K Ultra</div>
+          <div class="dl-desc">2560 × 1440 · Sharpened with linear interpolation</div>
+          <div class="dl-action" id="dlProAction">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Download
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Reset -->
+      <button class="reset-btn" onclick="resetApp()" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.73"/></svg>
+        Remove Another Image
+      </button>
+
+    </div>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-glass glass">
+
+      <div class="footer-social">
+        <!-- Gmail -->
+        <a class="social-link gmail" href="mailto:mdadilh314@gmail.com" aria-label="Send email to ADIL">
+          <!-- Gmail SVG -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Gmail
+        </a>
+
+        <!-- Instagram -->
+        <a class="social-link insta" href="https://www.instagram.com/adil_bhai888?igsh=MXQ2NXg2dDBreHgwZQ==" target="_blank" rel="noopener noreferrer" aria-label="Visit ADIL on Instagram">
+          <!-- Instagram SVG -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+          </svg>
+          Instagram
+        </a>
+      </div>
+
+      <p class="footer-connect-text">
+        To connect for any personal inquiries, click here to send a direct message on
+        <a href="https://www.instagram.com/adil_bhai888?igsh=MXQ2NXg2dDBreHgwZQ==" target="_blank" rel="noopener noreferrer">Instagram</a>.
+      </p>
+
+      <div class="footer-copy">© ADIL RemBg 2026 | dev :- ADIL</div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Background Removal Library -->
+<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@latest/dist/bundle.js"></script>
+
+<script>
+  /* ─── STATE ─────────────────────────────────────────────────────────── */
+  let removedBlob  = null;
+  let originalFile = null;
+  let isDark       = true;
+
+  /* ─── THEME TOGGLE ──────────────────────────────────────────────────── */
+  function toggleTheme() {
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    const track = document.getElementById('toggleTrack');
+    const label = document.getElementById('themeLabelText');
+    if (isDark) {
+      track.classList.add('active');
+      label.textContent = 'Light Mode';
+    } else {
+      track.classList.remove('active');
+      label.textContent = 'Dark Mode';
+    }
+  }
+
+  /* ─── TOAST ─────────────────────────────────────────────────────────── */
+  function showToast(msg, duration = 2800) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  /* ─── DROP ZONE EVENTS ──────────────────────────────────────────────── */
+  const dropZone  = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processFile(file);
+    else showToast('Please drop a valid image file.');
+  });
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+
+  /* ─── PROCESS FILE ──────────────────────────────────────────────────── */
+  async function processFile(file) {
+    originalFile = file;
+    removedBlob  = null;
+
+    // Show original preview immediately
+    const originalURL = URL.createObjectURL(file);
+    document.getElementById('originalPreview').src = originalURL;
+
+    showState('processing');
+    animateProgress();
+
+    try {
+      const config = {
+        publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@latest/dist/',
+        model: 'medium',
+      };
+
+      const blob = await imglyRemoveBackground(file, config);
+      removedBlob = blob;
+
+      const resultURL = URL.createObjectURL(blob);
+      document.getElementById('resultPreview').src = resultURL;
+
+      showState('result');
+      showToast('Background removed successfully!');
+    } catch (err) {
+      console.error(err);
+      showState('drop');
+      showToast('Processing failed. Please try a different image.');
+    }
+  }
+
+  /* ─── PROGRESS ANIMATION ────────────────────────────────────────────── */
+  let progressInterval = null;
+  function animateProgress() {
+    const bar = document.getElementById('progressBar');
+    bar.style.width = '0%';
+    let pct = 0;
+    clearInterval(progressInterval);
+    progressInterval = setInterval(() => {
+      if (pct < 88) {
+        pct += Math.random() * 3.5;
+        bar.style.width = Math.min(pct, 88) + '%';
+      }
+    }, 220);
+  }
+  function finishProgress() {
+    clearInterval(progressInterval);
+    document.getElementById('progressBar').style.width = '100%';
+  }
+
+  /* ─── SHOW STATE ────────────────────────────────────────────────────── */
+  function showState(state) {
+    document.getElementById('dropZone').style.display       = state === 'drop'       ? '' : 'none';
+    document.getElementById('processingPanel').style.display = state === 'processing' ? 'block' : 'none';
+    document.getElementById('resultSection').style.display  = state === 'result'     ? 'block' : 'none';
+    if (state === 'result') { finishProgress(); }
+    if (state === 'processing') {
+      document.getElementById('processingPanel').classList.add('active');
+    }
+  }
+
+  /* ─── RESET ─────────────────────────────────────────────────────────── */
+  function resetApp() {
+    removedBlob  = null;
+    originalFile = null;
+    fileInput.value = '';
+    resetDownloadButtons();
+    showState('drop');
+  }
+
+  /* ─── DOWNLOAD PIPELINE ─────────────────────────────────────────────── */
+  const SIZES = {
+    normal:  { w: 1280, h: 720,  sharp: false },
+    premium: { w: 1920, h: 1080, sharp: false },
+    pro:     { w: 2560, h: 1440, sharp: true  },
+  };
+
+  async function handleDownload(tier) {
+    if (!removedBlob) return;
+
+    const btn       = document.getElementById('dl' + tier.charAt(0).toUpperCase() + tier.slice(1));
+    const actionEl  = document.getElementById('dl' + tier.charAt(0).toUpperCase() + tier.slice(1) + 'Action');
+    const { w, h, sharp } = SIZES[tier];
+
+    // Lock button
+    btn.disabled = true;
+    actionEl.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.9s linear infinite;width:14px;height:14px"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+      Downloading...`;
+
+    try {
+      const exportBlob = await compileExport(removedBlob, w, h, sharp);
+      triggerDownload(exportBlob, `adilrembg-${tier}-${w}x${h}.png`);
+      showToast(`Saved at ${w}×${h} — enjoy!`);
+    } catch(e) {
+      showToast('Export failed, please try again.');
+    }
+
+    // Restore button after short delay
+    setTimeout(() => {
+      btn.disabled = false;
+      actionEl.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Download`;
+    }, 1800);
+  }
+
+  /* ─── CANVAS EXPORT ─────────────────────────────────────────────────── */
+  async function compileExport(blob, targetW, targetH, applySharpening) {
+    const img = await loadImage(URL.createObjectURL(blob));
+
+    // Fit image inside target dimensions maintaining aspect ratio
+    const srcW = img.naturalWidth;
+    const srcH = img.naturalHeight;
+    const ratio = Math.min(targetW / srcW, targetH / srcH);
+    const drawW = Math.round(srcW * ratio);
+    const drawH = Math.round(srcH * ratio);
+    const offX  = Math.round((targetW - drawW) / 2);
+    const offY  = Math.round((targetH - drawH) / 2);
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext('2d');
+
+    // Transparent background
+    ctx.clearRect(0, 0, targetW, targetH);
+
+    // High quality image rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    if (applySharpening) {
+      // Pro tier: draw slightly oversized, apply unsharp mask via convolution
+      ctx.drawImage(img, offX, offY, drawW, drawH);
+      applyUnsharpMask(ctx, targetW, targetH, 1.2, 0.6);
+    } else {
+      ctx.drawImage(img, offX, offY, drawW, drawH);
+    }
+
+    // Stealth watermark stamp — ultra fine, nearly invisible
+    const stampText = 'adilbgremove';
+    const fontSize  = Math.max(10, Math.round(targetW * 0.006));
+    ctx.save();
+    ctx.font          = `300 ${fontSize}px 'DM Sans', sans-serif`;
+    ctx.fillStyle     = 'rgba(180,180,180,0.045)';
+    ctx.textAlign     = 'right';
+    ctx.textBaseline  = 'bottom';
+    ctx.fillText(stampText, targetW - 6, targetH - 4);
+    ctx.restore();
+
+    return new Promise(resolve => {
+      canvas.toBlob(b => {
+        // Silently embed auth string in blob metadata via reconstruct
+        embedSignature(b).then(signed => resolve(signed));
+      }, 'image/png', 1.0);
+    });
+  }
+
+  /* ─── UNSHARP MASK (Pro Sharpening) ────────────────────────────────── */
+  function applyUnsharpMask(ctx, w, h, amount, radius) {
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data      = imageData.data;
+    const blurred   = gaussianBlurData(data, w, h, radius);
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue; // skip transparent
+      data[i]     = clamp(data[i]     + amount * (data[i]     - blurred[i]));
+      data[i + 1] = clamp(data[i + 1] + amount * (data[i + 1] - blurred[i + 1]));
+      data[i + 2] = clamp(data[i + 2] + amount * (data[i + 2] - blurred[i + 2]));
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  function clamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+
+  function gaussianBlurData(src, w, h, r) {
+    // Simple box blur approximation (3 passes) as unsharp mask base
+    const out  = new Uint8ClampedArray(src);
+    const temp = new Uint8ClampedArray(src.length);
+    const passes = 3;
+    let radius = Math.round(r * 1.5);
+    if (radius < 1) radius = 1;
+
+    for (let p = 0; p < passes; p++) {
+      // Horizontal pass
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let rr = 0, gg = 0, bb = 0, aa = 0, count = 0;
+          for (let k = -radius; k <= radius; k++) {
+            const nx = Math.min(w - 1, Math.max(0, x + k));
+            const idx = (y * w + nx) * 4;
+            rr += out[idx]; gg += out[idx+1]; bb += out[idx+2]; aa += out[idx+3];
+            count++;
+          }
+          const i = (y * w + x) * 4;
+          temp[i]=rr/count; temp[i+1]=gg/count; temp[i+2]=bb/count; temp[i+3]=aa/count;
+        }
+      }
+      // Vertical pass
+      for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+          let rr = 0, gg = 0, bb = 0, aa = 0, count = 0;
+          for (let k = -radius; k <= radius; k++) {
+            const ny = Math.min(h - 1, Math.max(0, y + k));
+            const idx = (ny * w + x) * 4;
+            rr += temp[idx]; gg += temp[idx+1]; bb += temp[idx+2]; aa += temp[idx+3];
+            count++;
+          }
+          const i = (y * w + x) * 4;
+          out[i]=rr/count; out[i+1]=gg/count; out[i+2]=bb/count; out[i+3]=aa/count;
+        }
+      }
+    }
+    return out;
+  }
+
+  /* ─── SIGNATURE EMBEDDING ───────────────────────────────────────────── */
+  async function embedSignature(blob) {
+    // Silently reconstruct blob with auth string woven into byte structure
+    const buf    = await blob.arrayBuffer();
+    const bytes  = new Uint8Array(buf);
+    const sigStr = 'adilbgremove';
+    const sigArr = new TextEncoder().encode(sigStr);
+    // Append signature bytes after PNG IEND chunk tail (harmless to renderers)
+    const combined = new Uint8Array(bytes.length + sigArr.length);
+    combined.set(bytes, 0);
+    combined.set(sigArr, bytes.length);
+    return new Blob([combined], { type: 'image/png' });
+  }
+
+  /* ─── TRIGGER DOWNLOAD ──────────────────────────────────────────────── */
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  /* ─── LOAD IMAGE UTILITY ────────────────────────────────────────────── */
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload  = () => resolve(img);
+      img.onerror = reject;
+      img.src     = src;
+    });
+  }
+
+  /* ─── RESET DOWNLOAD BUTTONS ────────────────────────────────────────── */
+  function resetDownloadButtons() {
+    ['Normal','Premium','Pro'].forEach(t => {
+      const btn = document.getElementById('dl' + t);
+      const act = document.getElementById('dl' + t + 'Action');
+      if (btn) btn.disabled = false;
+      if (act) act.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Download`;
+    });
+  }
+
+  /* ─── INIT ──────────────────────────────────────────────────────────── */
+  showState('drop');
+</script>
+</body>
+</html>
